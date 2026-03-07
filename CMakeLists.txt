@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.25)
 
 project(
-        QtBoostCMake
+        MiniClash
         VERSION 1.0.0
         DESCRIPTION "CMake project for easy Qt and Boost connection to other CMake projects"
         LANGUAGES CXX
@@ -42,4 +42,6 @@ add_subdirectory(lib)
 if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
     add_subdirectory(bin)
     add_subdirectory(tests)
+    add_subdirectory(src-client)
+    add_subdirectory(src-server)
 endif ()
