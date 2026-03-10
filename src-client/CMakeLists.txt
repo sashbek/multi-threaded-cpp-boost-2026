@@ -21,4 +21,4 @@ else ()
     )
 endif ()
 
-target_link_libraries(${PROJECT_NAME}-client PRIVATE qt)
+target_link_libraries(${PROJECT_NAME}-client PRIVATE qt MiniClash-common)

@@ -21,4 +21,4 @@ else ()
     )
 endif ()
 
-target_link_libraries(${PROJECT_NAME}-server PRIVATE boost)
+target_link_libraries(${PROJECT_NAME}-server PRIVATE boost MiniClash-common)
