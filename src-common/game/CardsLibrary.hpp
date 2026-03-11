@@ -1,7 +1,7 @@
 #ifndef CARDSLIBRARY_HPP
 #define CARDSLIBRARY_HPP
 
-#include <common/model/Card.hpp>
+#include "model/Card.hpp"
 #include <unordered_map>
 #include <memory>
 

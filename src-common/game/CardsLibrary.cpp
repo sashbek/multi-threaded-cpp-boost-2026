@@ -1,4 +1,4 @@
-#include <common/game/CardsLibrary.hpp>
+#include "CardsLibrary.hpp"
 
 namespace game {
 

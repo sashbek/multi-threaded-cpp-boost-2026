@@ -25,7 +25,7 @@ struct CardStats {
     int damage;
     float attack_speed; // cnt per second
     int range;
-    int on_death_amage;
+    int on_death_damage;
     int weight;
 };
 

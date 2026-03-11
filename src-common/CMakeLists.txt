@@ -1,23 +1,24 @@
-#set(Boost_NO_SYSTEM_PATHS ON)
-#set(Boost_USE_MULTITHREADED ON)
-#set(Boost_USE_STATIC_LIBS ON)
-#set(Boost_USE_STATIC_RUNTIME ON)
-#set(BOOST_ALL_DYN_LINK OFF)
-#
-#if (NOT Boost_ROOT AND EXISTS $ENV{BOOSTROOT})
-#    set(Boost_ROOT $ENV{BOOSTROOT})
-#endif()
-
-#find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets)
-#find_package(Boost REQUIRED)
-
-add_library(${PROJECT_NAME}-common
-        ./model/Card.hpp
-        ./model/GameState.hpp
-        ./model/Position.hpp
-        ./model/Unit.hpp
-        ./game/CardsLibrary.hpp
-        ./game/CardsLibrary.cpp
+set(COMMON_SOURCES
+    game/CardsLibrary.cpp
+    game/CardEffects.cpp
 )
 
-#target_link_libraries(${PROJECT_NAME}-server PRIVATE boost)
+set(COMMON_HEADERS
+    game/CardsLibrary.hpp
+    game/CardEffects.hpp
+    model/Card.hpp
+    model/GameState.hpp
+    model/Position.hpp
+    model/Unit.hpp
+)
+
+add_library(${PROJECT_NAME}-common STATIC ${COMMON_SOURCES} ${COMMON_HEADERS})
+
+target_include_directories(${PROJECT_NAME}-common 
+    PUBLIC 
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+set_target_properties(${PROJECT_NAME}-common PROPERTIES
+    PUBLIC_HEADER "${COMMON_HEADERS}"
+)
