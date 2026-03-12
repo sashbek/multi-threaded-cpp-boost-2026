@@ -35,7 +35,7 @@ jobs:
         if: ${{ matrix.config.os == 'ubuntu-latest' }}
         run: |
           sudo apt update
-          sudo apt install libgl1-mesa-dev libglu1-mesa-dev
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
 
       - name: Create CMake cache
         shell: bash
@@ -161,9 +161,9 @@ jobs:
       - name: Install Qt and Boost
         run: |
           sudo apt update
-          sudo apt install libgl1-mesa-dev libglu1-mesa-dev
-          sudo apt install qt6-base-dev
-          sudo apt install libboost-all-dev
+          sudo apt install -y libgl1-mesa-dev libglu1-mesa-dev
+          sudo apt install -y qt6-base-dev
+          sudo apt install -y libboost-all-dev
 
       - name: Create CMake cache
         run: |
