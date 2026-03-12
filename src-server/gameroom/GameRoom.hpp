@@ -1,8 +1,8 @@
 #ifndef GAMEROOM_HPP
 #define GAMEROOM_HPP
 
-#include <model/Unit.hpp>
 #include <model/Card.hpp>
+#include <model/Unit.hpp>
 #include <model/GameState.hpp>
 #include <game/CardsLibrary.hpp>
 #include <game/CardEffects.hpp>

@@ -12,20 +12,20 @@ CardsLibrary& CardsLibrary::getInstance() {
 }
 
 void CardsLibrary::initializeCards() {
-    Card footman(CardType::FOOTMAN, "Footman", CardStats{30, 2, 5, 1.0f, 0, 0, 3});
+    Card footman(CardType::FOOTMAN, "Footman", CardStats{30, 2, 5, 1.0f, 1, 0, 3});
     cards[CardType::FOOTMAN] = footman;
     
     Card archer(CardType::ARCHER, "Archer", CardStats{20, 3, 4, 1.5f, 1, 0, 2});
     cards[CardType::ARCHER] = archer;
     
-    Card knight(CardType::KNIGHT, "Knight", CardStats{50, 4, 7, 0.8f, 0, 0, 4});
+    Card knight(CardType::KNIGHT, "Knight", CardStats{50, 4, 7, 0.8f, 1, 0, 4});
     cards[CardType::KNIGHT] = knight;
     
     Card wizard(CardType::WIZARD, "Wizard", CardStats{25, 5, 8, 1.0f, 1, 0, 3});
     wizard.setSplashDamage(true);
     cards[CardType::WIZARD] = wizard;
     
-    Card barbarian(CardType::BARBARIAN, "Barbarian", CardStats{40, 5, 12, 1.0f, 0, 0, 4});
+    Card barbarian(CardType::BARBARIAN, "Barbarian", CardStats{40, 5, 12, 1.0f, 1, 0, 4});
     cards[CardType::BARBARIAN] = barbarian;
     
     Card dragon(CardType::DRAGON, "Dragon", CardStats{60, 8, 15, 1.0f, 1, 0, 6});
@@ -38,7 +38,7 @@ void CardsLibrary::initializeCards() {
     Card assassin(CardType::ASSASSIN, "Assassin", CardStats{15, 4, 10, 1.5f, 0, 0, 2});
     cards[CardType::ASSASSIN] = assassin;
     
-    Card bomber(CardType::BOMBER, "Bomber", CardStats{40, 3, 0, 0.0f, 0, 300, 3});
+    Card bomber(CardType::BOMBER, "Bomber", CardStats{3, 3, 0, 0.0f, 0, 300, 3});
     cards[CardType::BOMBER] = bomber;
 }
 

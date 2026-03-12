@@ -12,13 +12,15 @@ set(COMMON_HEADERS
     model/Unit.hpp
 )
 
-add_library(${PROJECT_NAME}-common STATIC ${COMMON_SOURCES} ${COMMON_HEADERS})
+add_library(lib_common SHARED ${COMMON_SOURCES} ${COMMON_HEADERS})
 
-target_include_directories(${PROJECT_NAME}-common 
-    PUBLIC 
+target_link_libraries(lib_common PUBLIC boost)
+
+target_include_directories(lib_common
+    PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-set_target_properties(${PROJECT_NAME}-common PROPERTIES
+set_target_properties(lib_common PROPERTIES
     PUBLIC_HEADER "${COMMON_HEADERS}"
 )

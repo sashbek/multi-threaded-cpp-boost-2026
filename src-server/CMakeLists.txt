@@ -43,7 +43,7 @@ target_include_directories(${PROJECT_NAME}-server
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-target_link_libraries(${PROJECT_NAME}-server PRIVATE boost MiniClash-common)
+target_link_libraries(${PROJECT_NAME}-server PRIVATE lib_common boost)
 
 set_target_properties(${PROJECT_NAME}-server PROPERTIES
     PUBLIC_HEADER "${SERVER_HEADERS}"

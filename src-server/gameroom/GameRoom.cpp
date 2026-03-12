@@ -45,20 +45,6 @@ void GameRoom::updateGame() {
         }
     }
     
-    for (auto& unit : units_) {
-        int direction = (unit.ownerId == 0) ? 1 : -1;
-        Position newPos{unit.pos.x, unit.pos.y + direction};
-        
-        if (newPos.isValid()) {
-            unit.pos = newPos;
-        }
-        
-        if (newPos.isEnemyBase(unit.ownerId)) {
-            health_[1 - unit.ownerId] -= unit.card.getStats().health;
-            unit.currentHealth = 0;
-        }
-    }
-    
     CardEffects::CombatContext context{units_, power_, tickCounter_};
     
     std::vector<std::pair<int, int>> attacks;
@@ -106,6 +92,57 @@ void GameRoom::updateGame() {
     
     removeDeadUnits();
     
+    if (!units_.empty()) {
+        std::sort(units_.begin(), units_.end(), 
+            [](const Unit& a, const Unit& b) {
+                return a.card.getStats().weight > b.card.getStats().weight;
+            });
+        
+        std::vector<bool> unitInCombat(units_.size(), false);
+        
+        for (size_t i = 0; i < units_.size(); ++i) {
+            for (size_t j = i + 1; j < units_.size(); ++j) {
+                auto& unit1 = units_[i];
+                auto& unit2 = units_[j];
+                
+                if (unit1.ownerId == unit2.ownerId) continue;
+                
+                if (areNeighbors(unit1.pos, unit2.pos)) {
+                    unitInCombat[i] = true;
+                    unitInCombat[j] = true;
+                }
+            }
+        }
+        
+        for (size_t i = 0; i < units_.size(); ++i) {
+            if (unitInCombat[i]) continue;
+            
+            auto& unit = units_[i];
+            int direction = (unit.ownerId == 0) ? 1 : -1;
+            Position newPos{unit.pos.x, unit.pos.y + direction};
+            
+            bool cellOccupied = false;
+            for (size_t j = 0; j < units_.size(); ++j) {
+                if (i == j) continue;
+                if (units_[j].pos.x == newPos.x && units_[j].pos.y == newPos.y) {
+                    cellOccupied = true;
+                    break;
+                }
+            }
+            
+            if (newPos.isValid() && !cellOccupied) {
+                unit.pos = newPos;
+            }
+            
+            if (newPos.isEnemyBase(unit.ownerId)) {
+                health_[1 - unit.ownerId] -= unit.currentHealth;
+                unit.currentHealth = 0;
+            }
+        }
+        
+        removeDeadUnits();
+    }
+    
     checkGameEnd();
 }
 
@@ -136,14 +173,16 @@ bool GameRoom::placeCard(int playerId, CardType cardType, int x) {
     
     if (!gameActive_ || gameEnded_) return false;
     
-    // Проверка валидности хода
     if (!isValidPlacement(playerId, cardType, x)) {
         return false;
     }
     
     const auto& card = CardsLibrary::getInstance().getCard(cardType);
-    
-    // Создание юнита
+
+    if (power_[playerId] < card.getStats().cost) {
+        return false;
+    }
+
     Unit unit{
         nextUnitId_++,
         card,
@@ -152,7 +191,6 @@ bool GameRoom::placeCard(int playerId, CardType cardType, int x) {
         playerId
     };
     
-    // Списание энергии
     power_[playerId] -= card.getStats().cost;
     
     units_.push_back(unit);
@@ -174,14 +212,11 @@ int GameRoom::getOpponentId(int playerId) const {
 }
 
 bool GameRoom::isValidPlacement(int playerId, CardType cardType, int x) const {
-    // Проверка координат
     if (x < 0 || x >= FIELD_WIDTH) return false;
     
-    // Проверка энергии
     const auto& card = CardsLibrary::getInstance().getCard(cardType);
     if (power_[playerId] < card.getStats().cost) return false;
     
-    // Проверка, что клетка свободна
     int placeY = (playerId == 0) ? 0 : FIELD_HEIGHT - 1;
     for (const auto& unit : units_) {
         if (unit.pos.x == x && unit.pos.y == placeY) {
@@ -195,7 +230,7 @@ bool GameRoom::isValidPlacement(int playerId, CardType cardType, int x) const {
 bool GameRoom::areNeighbors(const Position& p1, const Position& p2) const {
     int dx = std::abs(p1.x - p2.x);
     int dy = std::abs(p1.y - p2.y);
-    return dx <= 1 && dy <= 1 && !(dx == 0 && dy == 0);
+    return dx <= 1 && dy <= 1;
 }
 
 } // namespace game
