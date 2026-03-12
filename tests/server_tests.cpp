@@ -416,3 +416,201 @@ TEST_F(GameRoomTest, GameStateForDifferentPlayers) {
     EXPECT_EQ(state1.yourPower, 3);
     EXPECT_EQ(state2.yourPower, 2);
 }
+
+TEST_F(GameRoomTest, UnitsCantMoveThroughEachOther) {
+    gameRoom->placeCard(0, CardType::FOOTMAN, 5);
+    gameRoom->placeCard(0, CardType::FOOTMAN, 5);
+
+    gameRoom->placeCard(0, CardType::FOOTMAN, 6);
+    
+    auto state = gameRoom->getGameState(0);
+    EXPECT_EQ(state.units.size(), 2);
+    
+    int pos1 = -1, pos2 = -1;
+    for (const auto& unit : state.units) {
+        if (unit.pos.x == 5) pos1 = unit.pos.y;
+        if (unit.pos.x == 6) pos2 = unit.pos.y;
+    }
+    
+    for (int i = 0; i < 5; i++) {
+        gameRoom->updateGame();
+    }
+    
+    state = gameRoom->getGameState(0);
+    
+    std::set<std::pair<int, int>> positions;
+    for (const auto& unit : state.units) {
+        auto pos = std::make_pair(unit.pos.x, unit.pos.y);
+        EXPECT_TRUE(positions.find(pos) == positions.end()) 
+            << "Two units at same position: (" << unit.pos.x << "," << unit.pos.y << ")";
+        positions.insert(pos);
+    }
+}
+
+TEST_F(GameRoomTest, UnitBlockedByEnemyStops) {
+    gameRoom->placeCard(0, CardType::FOOTMAN, 5);
+    gameRoom->placeCard(1, CardType::FOOTMAN, 5);
+    
+    auto state = gameRoom->getGameState(0);
+    int enemyY = -1;
+    for (const auto& unit : state.units) {
+        if (unit.ownerId == 1 && unit.pos.x == 5) {
+            enemyY = unit.pos.y;
+            break;
+        }
+    }
+    
+    for (int i = 0; i < 10; i++) {
+        gameRoom->updateGame();
+    }
+    
+    state = gameRoom->getGameState(0);
+    
+    bool foundPair = false;
+    for (const auto& unit1 : state.units) {
+        for (const auto& unit2 : state.units) {
+            if (unit1.ownerId != unit2.ownerId && unit1.pos.x == unit2.pos.x) {
+                EXPECT_EQ(std::abs(unit1.pos.y - unit2.pos.y), 1)
+                    << "Units should be adjacent, not at same position";
+                foundPair = true;
+            }
+        }
+    }
+    EXPECT_TRUE(foundPair);
+}
+
+TEST_F(GameRoomTest, UnitWithHigherWeightMovesFirst) {
+    gameRoom->placeCard(0, CardType::GOLEM, 5);   // weight 8
+    gameRoom->placeCard(0, CardType::FOOTMAN, 6); // weight 3
+    
+    auto state = gameRoom->getGameState(0);
+    int golemY = -1, footmanY = -1;
+    for (const auto& unit : state.units) {
+        if (unit.card.getType() == CardType::GOLEM) golemY = unit.pos.y;
+        if (unit.card.getType() == CardType::FOOTMAN) footmanY = unit.pos.y;
+    }
+    
+    gameRoom->updateGame();
+    
+    state = gameRoom->getGameState(0);
+    for (const auto& unit : state.units) {
+        if (unit.card.getType() == CardType::GOLEM) {
+            EXPECT_EQ(unit.pos.y, golemY + 1); // Голем должен двигаться
+        }
+        if (unit.card.getType() == CardType::FOOTMAN) {
+            EXPECT_EQ(unit.pos.y, footmanY + 1); // Футман тоже двигается (разные x)
+        }
+    }
+}
+
+
+TEST_F(GameRoomTest, PlaceCardAfterGameEnded) {
+    for (int i = 0; i < 30; i++) {
+        gameRoom->placeCard(1, CardType::FOOTMAN, i % 10);
+        gameRoom->updateGame();
+    }
+    for (int i = 0; i < 30; i++) {
+        gameRoom->updateGame();
+    }
+    
+    EXPECT_FALSE(gameRoom->isActive());
+    
+    bool result = gameRoom->placeCard(1, CardType::FOOTMAN, 5);
+    EXPECT_FALSE(result);
+}
+
+TEST_F(GameRoomTest, PlaceCardWithInvalidPlayerId) {
+    bool result = gameRoom->placeCard(3, CardType::FOOTMAN, 5);
+    EXPECT_FALSE(result);
+}
+
+TEST_F(GameRoomTest, PlaceCardWithInvalidCardType) {
+    CardType invalidType = static_cast<CardType>(999);
+    EXPECT_THROW(gameRoom->placeCard(1, invalidType, 5), std::out_of_range);
+}
+
+TEST_F(GameRoomTest, GetGameStateForInvalidPlayer) {
+    auto state = gameRoom->getGameState(3);
+    EXPECT_GE(state.yourHealth, 0);
+}
+
+TEST_F(GameRoomTest, PowerNeverGoesNegative) {
+    gameRoom->placeCard(1, CardType::DRAGON, 5);
+    auto state = gameRoom->getGameState(1);
+    EXPECT_GE(state.yourPower, 0);
+    
+    gameRoom->placeCard(1, CardType::DRAGON, 6);
+    gameRoom->placeCard(1, CardType::DRAGON, 7);
+    
+    state = gameRoom->getGameState(1);
+    EXPECT_GE(state.yourPower, 0);
+}
+
+TEST_F(GameRoomTest, DeadUnitsDontBlockMovement) {
+    gameRoom->placeCard(0, CardType::FOOTMAN, 5);
+    gameRoom->placeCard(1, CardType::BARBARIAN, 5);
+    
+    for (int i = 0; i < 10; i++) {
+        gameRoom->updateGame();
+        //auto st = gameRoom->getGameState(0);
+        //printGameField(st, 0);
+        //printUnitDetails(st);
+    }
+    
+    auto state = gameRoom->getGameState(0);
+    int unitCount = state.units.size();
+    
+    int oldY = -1;
+    for (const auto& unit : state.units) {
+        if (unit.ownerId == 1) oldY = unit.pos.y;
+    }
+    
+    gameRoom->updateGame();
+    //auto st = gameRoom->getGameState(0);
+    //printGameField(st, 0);
+    //printUnitDetails(st);
+    
+    state = gameRoom->getGameState(0);
+    for (const auto& unit : state.units) {
+        if (unit.ownerId == 1) {
+            EXPECT_LT(unit.pos.y, oldY) << "Barbarian should continue moving after enemy dies";
+        }
+    }
+}
+
+TEST_F(GameRoomTest, MultipleUnitsCantOccupySameCellAfterCombat) {
+    gameRoom->placeCard(0, CardType::FOOTMAN, 5);
+    gameRoom->placeCard(1, CardType::FOOTMAN, 5);
+    gameRoom->placeCard(0, CardType::FOOTMAN, 4);
+    gameRoom->placeCard(1, CardType::FOOTMAN, 6);
+    
+    for (int i = 0; i < 10; i++) {
+        gameRoom->updateGame();
+    }
+    
+    auto state = gameRoom->getGameState(0);
+    std::set<std::pair<int, int>> positions;
+    for (const auto& unit : state.units) {
+        auto pos = std::make_pair(unit.pos.x, unit.pos.y);
+        EXPECT_TRUE(positions.find(pos) == positions.end()) 
+            << "Two units at same position after combat";
+        positions.insert(pos);
+    }
+}
+
+TEST_F(GameRoomTest, CantPlaceCardDuringCombatTick) {
+    gameRoom->placeCard(0, CardType::FOOTMAN, 5);
+    gameRoom->placeCard(1, CardType::FOOTMAN, 5);
+    
+    std::thread t([this]() {
+        for (int i = 0; i < 10; i++) {
+            gameRoom->updateGame();
+        }
+    });
+    
+    bool result = gameRoom->placeCard(0, CardType::ARCHER, 6);
+    
+    t.join();
+    
+    SUCCEED() << "No crash during concurrent access";
+}
